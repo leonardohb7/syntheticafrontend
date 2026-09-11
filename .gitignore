@@ -1,0 +1,40 @@
+# Dependências e saídas de build
+node_modules/
+.next/
+out/
+build/
+dist/
+coverage/
+
+# Variáveis de ambiente. O exemplo é versionado de propósito: é ele que diz a
+# quem clona o repositório qual variável o portal espera.
+.env*
+!.env.example
+!.env.local.example
+
+# TypeScript
+*.tsbuildinfo
+
+# Instruções de sessão de IA, prompts e configuração de agente. São ferramenta
+# de quem escreve o código, não parte da aplicação: quem clona o repositório
+# para rodar o portal não precisa de nenhum destes arquivos.
+CLAUDE.md
+PROMPTS_CLAUDE_CODE.md
+.claude/
+.cursor/
+.aider*
+
+# Plataformas de deploy
+.vercel/
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*~
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log

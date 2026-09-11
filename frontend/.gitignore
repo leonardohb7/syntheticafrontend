@@ -1,0 +1,16 @@
+node_modules/
+.next/
+out/
+build/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+# O exemplo precisa ser versionado: é ele que diz a quem clonar o repositório
+# qual variável o portal espera. A regra .env* acima o pegaria junto.
+!.env.local.example
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts

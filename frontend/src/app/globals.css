@@ -1,0 +1,669 @@
+@import "tailwindcss";
+
+/* =========================================================================
+   DERBY SYNTHETICA — SISTEMA "TERMINAL"
+
+   Retro-futurista por subtração. Três decisões carregam o sistema inteiro:
+
+   1. UM acento. Magenta sobre preto puro. O ciano existe só como sinal de
+      estado (foco, item ativo) — nunca como decoração. Violeta, lavanda,
+      sunset e âmbar saíram: três neons brigando é o que polui.
+   2. TRAÇO, não chapa. Nada de preenchimento em gradiente, nada de sombra
+      projetada. Uma linha de 1px com bloom curto — tubo de neon, não
+      cartão de plástico brilhante.
+   3. LINHA, não cartão. Informação repetida mora em fileiras separadas por
+      fio, como um índice de terminal. Cartão é exceção reservada ao
+      destaque único de cada página.
+   ========================================================================= */
+
+@theme {
+  --color-void: #000000;
+  --color-ink: #F4F2F7;
+  --color-accent: #FF2E97;
+  --color-live: #00F0FF;
+
+  /* Orbitron só na marca e em títulos curtos em caixa alta. Share Tech Mono
+     conduz toda a interface. Rajdhani entra apenas na prosa longa dos
+     ensaios, onde monoespaçado cansaria.
+
+     As três apontam para variáveis do next/font, publicadas no <html> pelo
+     layout: o nome literal da família não serve mais, porque o next/font
+     hospeda o arquivo e gera um nome próprio a cada build. */
+  --font-display: var(--font-orbitron), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-share-tech-mono), ui-monospace, monospace;
+  --font-body: var(--font-rajdhani), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    background-color: #000000;
+    /* Reserva o vão da barra de rolagem mesmo quando ela some. A troca de
+       trilha encolhe a página enquanto o acervo atravessa, e sem a reserva o
+       instante em que a barra desaparece empurra a coluna inteira uns pixels
+       para o lado, bem no fim da animação. */
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    background-color: #000000;
+    color: #F4F2F7;
+    overflow-x: hidden;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Hierarquia por escala e caixa, nunca por brilho. Nenhum título recebe
+     text-shadow: o glow fica reservado às linhas. */
+  h1, h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 1.02;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #FFFFFF;
+  }
+
+  h3, h4, h5, h6 {
+    font-family: var(--font-mono);
+    font-weight: 400;
+    line-height: 1.25;
+    letter-spacing: 0.04em;
+    color: #FFFFFF;
+  }
+
+  ::selection {
+    background: #FF2E97;
+    color: #000000;
+  }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #000000; }
+  ::-webkit-scrollbar-thumb { background: rgba(255, 46, 151, 0.35); }
+  ::-webkit-scrollbar-thumb:hover { background: #FF2E97; }
+
+  :focus-visible {
+    outline: 1px solid #00F0FF;
+    outline-offset: 2px;
+  }
+}
+
+/* Tudo em @layer components: as utilities do Tailwind precisam continuar
+   vencendo (um `border-live` ou um `p-8` no markup tem de valer). */
+@layer components {
+
+  /* =======================================================================
+     MOLDURA — a única forma do sistema
+
+     Retângulo de 1px, interior transparente. Sem raio, sem gradiente, sem
+     sombra projetada: o que dá vida é o bloom curto de 6px, e ele só
+     aparece no estado aceso.
+     ======================================================================= */
+
+  .sw-frame {
+    position: relative;
+    border: 1px solid rgba(255, 46, 151, 0.24);
+    background: rgba(255, 46, 151, 0.02);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  }
+
+  /* Moldura clicável: a linha acende. Sem translate, sem escala — o
+     movimento era metade do ruído. */
+  .sw-frame-live:hover {
+    border-color: #FF2E97;
+    background: rgba(255, 46, 151, 0.05);
+    box-shadow: 0 0 6px rgba(255, 46, 151, 0.30), inset 0 0 12px rgba(255, 46, 151, 0.06);
+  }
+
+  /* Marcas de canto — as juntas de esquadro das referências. Um pseudo só,
+     quatro quadrados de 5px em background-image, transbordando 1px para
+     fora da linha para se lerem como encaixe e não como enfeite. */
+  .sw-ticks::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    pointer-events: none;
+    background-image:
+      linear-gradient(#FF2E97, #FF2E97),
+      linear-gradient(#FF2E97, #FF2E97),
+      linear-gradient(#FF2E97, #FF2E97),
+      linear-gradient(#FF2E97, #FF2E97);
+    background-size: 5px 5px;
+    background-position: left top, right top, left bottom, right bottom;
+    background-repeat: no-repeat;
+  }
+
+  /* =======================================================================
+     FIO E FILEIRA — o substituto do cartão
+
+     Lista de dados vira índice: rótulo à esquerda, valor à direita, fio
+     embaixo. É o que as referências fazem em `//ROLE_ DESIGNER`.
+     ======================================================================= */
+
+  .sw-rule {
+    border-top: 1px solid rgba(255, 46, 151, 0.20);
+  }
+
+  /* O fio desliga para a direita em vez de cercar o conteúdo. */
+  .sw-rule-fade {
+    border-top: 1px solid transparent;
+    border-image: linear-gradient(90deg, rgba(255, 46, 151, 0.55) 0%, rgba(255, 46, 151, 0.12) 60%, transparent 100%) 1;
+  }
+
+  .sw-row {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    border-bottom: 1px solid rgba(255, 46, 151, 0.16);
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+  }
+
+  .sw-row:hover {
+    border-bottom-color: #FF2E97;
+    background: rgba(255, 46, 151, 0.04);
+  }
+
+  /* Preenche o vão entre rótulo e valor com pontilhado, como sumário
+     impresso. Vive num <span> flex-1 entre os dois. */
+  .sw-leader {
+    flex: 1 1 auto;
+    min-width: 1rem;
+    align-self: center;
+    height: 1px;
+    background-image: linear-gradient(90deg, rgba(255, 46, 151, 0.35) 0 2px, transparent 2px 6px);
+    background-size: 6px 1px;
+    background-repeat: repeat-x;
+  }
+
+  /* =======================================================================
+     TIPOGRAFIA UTILITÁRIA
+     ======================================================================= */
+
+  /* Rótulo de campo/seção. O `//` das referências entra por CSS para não
+     sujar o markup nem ser lido em voz alta por leitor de tela. */
+  .sw-label {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    line-height: 1.6;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #FF2E97;
+  }
+
+  .sw-label::before {
+    content: '//';
+    opacity: 0.55;
+    margin-right: 0.4em;
+  }
+
+  /* Variante sem prefixo, para quando o rótulo já vive dentro de uma
+     fileira que carrega o próprio marcador. */
+  .sw-label-bare::before { content: none; }
+
+  /* Numeral de índice: tabular, para as colunas alinharem. */
+  .sw-idx {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.1em;
+    color: rgba(255, 46, 151, 0.75);
+  }
+
+  /* Prosa longa dos ensaios — o único lugar onde saímos do monoespaçado. */
+  .sw-prose {
+    font-family: var(--font-body);
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    letter-spacing: 0.01em;
+  }
+
+  /* Cursor de bloco piscando, como terminal esperando entrada. */
+  .sw-caret::after {
+    content: '█';
+    margin-left: 0.15em;
+    animation: swBlink 1.1s steps(1) infinite;
+  }
+
+  @keyframes swBlink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
+
+  /* =======================================================================
+     CONTROLES — mesma moldura em escala menor
+     ======================================================================= */
+
+  .sw-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    border: 1px solid rgba(255, 46, 151, 0.45);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: #F4F2F7;
+    transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .sw-btn:hover {
+    border-color: #FF2E97;
+    color: #FFFFFF;
+    background: rgba(255, 46, 151, 0.08);
+    box-shadow: 0 0 8px rgba(255, 46, 151, 0.30);
+  }
+
+  /* Ação principal: uma por tela. Chapa magenta cheia, texto preto. */
+  .sw-btn-solid {
+    border-color: #FF2E97;
+    background: #FF2E97;
+    color: #000000;
+  }
+
+  .sw-btn-solid:hover {
+    background: #FFFFFF;
+    border-color: #FFFFFF;
+    color: #000000;
+    box-shadow: 0 0 12px rgba(255, 46, 151, 0.45);
+  }
+
+  /* Filtro de categoria/cidade. */
+  .sw-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid rgba(255, 46, 151, 0.20);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: rgba(244, 242, 247, 0.55);
+    transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+  }
+
+  .sw-chip:hover {
+    border-color: rgba(255, 46, 151, 0.65);
+    color: #F4F2F7;
+  }
+
+  .sw-chip-on,
+  .sw-chip-on:hover {
+    border-color: #FF2E97;
+    background: #FF2E97;
+    color: #000000;
+  }
+
+  /* Etiqueta de metadado: só texto entre colchetes, sem caixa. Uma moldura
+     de 12px de altura em volta de duas palavras é ruído. */
+  .sw-tag {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: rgba(255, 46, 151, 0.85);
+  }
+
+  .sw-tag::before { content: '['; opacity: 0.5; margin-right: 0.3em; }
+  .sw-tag::after  { content: ']'; opacity: 0.5; margin-left: 0.3em; }
+
+  /* Campo de busca/formulário. A linha vive no invólucro porque <input> não
+     aceita pseudo-elementos. */
+  .sw-field {
+    position: relative;
+    border: 1px solid rgba(255, 46, 151, 0.24);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .sw-field:focus-within {
+    border-color: #00F0FF;
+    box-shadow: 0 0 8px rgba(0, 240, 255, 0.25);
+  }
+
+  .sw-field input,
+  .sw-field select,
+  .sw-field textarea {
+    width: 100%;
+    background: transparent;
+    border: 0;
+    color: #F4F2F7;
+    font-family: var(--font-mono);
+    letter-spacing: 0.08em;
+  }
+
+  .sw-field input:focus,
+  .sw-field select:focus,
+  .sw-field textarea:focus { outline: none; }
+  .sw-field input::placeholder,
+  .sw-field textarea::placeholder { color: rgba(244, 242, 247, 0.30); }
+  .sw-field select option { background: #000000; color: #F4F2F7; }
+
+  /* Prosa do painel editorial: o texto de um ensaio é lido em parágrafo, não em
+     linha de comando, então aqui o monoespaçado sai e a entrelinha abre. */
+  .sw-field textarea {
+    display: block;
+    resize: vertical;
+    font-family: var(--font-body);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+  }
+
+  /* Campo recusado pela validação. O magenta é o acento do sistema, e ele fica
+     mesmo com o campo em foco: trocar para o ciano de foco apagaria a marca do
+     erro justo quando a pessoa volta ao campo para corrigi-lo. */
+  .sw-field-erro,
+  .sw-field-erro:focus-within {
+    border-color: #FF2E97;
+    box-shadow: 0 0 8px rgba(255, 46, 151, 0.35);
+  }
+
+  /* Caixa de marcar: quadrado vazio que vira chapa magenta. */
+  .sw-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    border: 1px solid rgba(255, 46, 151, 0.45);
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    line-height: 1;
+    color: transparent;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .sw-check-on {
+    border-color: #FF2E97;
+    background: #FF2E97;
+    color: #000000;
+  }
+
+  /* =======================================================================
+     SELETOR DE TRILHA — a microinteração do portal
+
+     Duas abas sobre um fio, e um traço de 1px que desliza de uma para a
+     outra. Nada de pílula preenchida atrás da aba ativa: o que marca o
+     estado é a linha acesa embaixo, do mesmo jeito que o resto do sistema.
+
+     Tempos: traço 180ms ease-out e hover 150ms, como no briefing de Motion.
+     A travessia do conteúdo passou para 600ms porque a distância mudou de
+     uma dezena de pixels para a largura da janela: no tempo antigo ela lia
+     como corte, não como movimento.
+     ======================================================================= */
+
+  .sw-trilha-abas {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid rgba(255, 46, 151, 0.20);
+  }
+
+  .sw-trilha-aba {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.55rem;
+    padding: 0.8rem 1.15rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    color: rgba(244, 242, 247, 0.42);
+    transition: color 150ms ease-out;
+  }
+
+  .sw-trilha-aba:hover { color: rgba(244, 242, 247, 0.85); }
+
+  .sw-trilha-aba-on,
+  .sw-trilha-aba-on:hover { color: #FFFFFF; }
+
+  /* Ciano é sinal de estado, e aqui ele marca só o foco de teclado. O recuo
+     negativo mantém o anel dentro da aba, para ele não encostar na vizinha
+     nem cobrir o traço. */
+  .sw-trilha-aba:focus-visible {
+    outline: 1px solid #00F0FF;
+    outline-offset: -2px;
+    color: #FFFFFF;
+  }
+
+  /* O traço que desliza. Mora sobre o fio das abas, com bloom curto e sem
+     sombra projetada, como toda linha acesa do sistema. */
+  .sw-trilha-indicador {
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    height: 1px;
+    background: #FF2E97;
+    box-shadow: 0 0 6px rgba(255, 46, 151, 0.55);
+    pointer-events: none;
+  }
+
+  /* A transição entra só depois da primeira medida, marcada pelo componente.
+     Antes disso o traço precisa poder assumir a posição inicial sem percurso. */
+  .sw-trilha-indicador[data-pronto='sim'] {
+    transition: transform 180ms ease-out, width 180ms ease-out;
+  }
+
+  /* O palco da troca. A altura é animada junto porque as duas trilhas têm
+     acervos de tamanhos diferentes, e o componente prende a altura antiga
+     antes de soltar para a nova. Sem isso o rodapé saltaria no primeiro
+     quadro, enquanto o acervo antigo ainda estivesse atravessando.
+
+     Tempo e curva ficam aqui, em variável, porque as três animações da
+     travessia (a camada que sai, a que entra e a altura) têm de terminar no
+     mesmo instante. A curva acelera de leve no começo e desacelera até parar,
+     em vez de cortar: é o que tira a sensação de freada no fim. */
+  .sw-trilha-palco {
+    --sw-tempo: 600ms;
+    --sw-curva: cubic-bezier(0.32, 0.72, 0, 1);
+    position: relative;
+    /* Corta no eixo vertical, e só nele. Enquanto a altura anima, o palco fica
+       menor que o acervo que está entrando, e o excedente transbordava para
+       baixo do rodapé. Quem recolhe esse excedente é o `overflow-x: hidden` do
+       AppShell, que por ser hidden num eixo faz o outro computar como `auto`:
+       a div vira contêiner de rolagem e pisca uma barra vertical por alguns
+       quadros. A barra estreita a coluna centralizada, então o título e as abas
+       andam alguns pixels para o lado enquanto o cabeçalho fixo fica parado.
+       Só acontecia indo de expressão para velocidade, que é a única direção em
+       que o palco cresce.
+
+       O eixo horizontal continua visível de propósito: é por ele que as duas
+       camadas atravessam os 100vw, e cortar aqui as apararia na largura da
+       coluna, não na da janela. A margem preserva o bloom da moldura acesa. */
+    overflow-x: visible;
+    overflow-y: clip;
+    overflow-clip-margin: 6px;
+    transition: height var(--sw-tempo) var(--sw-curva);
+  }
+
+  /* Sai do fluxo para não empurrar o acervo que está entrando. */
+  .sw-trilha-camada-sai {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    animation: swTrilhaSai var(--sw-tempo) var(--sw-curva) both;
+  }
+
+  /* Mesma duração e mesma curva das duas camadas: é isso que as mantém
+     coladas, como uma tira sendo puxada de lado. Curvas diferentes fariam
+     uma alcançar a outra no meio do caminho. */
+  .sw-trilha-camada-entra {
+    animation: swTrilhaEntra var(--sw-tempo) var(--sw-curva) both;
+  }
+
+  /* Promove as duas camadas a camada de composição antes do primeiro quadro.
+     Sem isso o navegador redesenha o texto a cada passo da travessia, e o que
+     se vê é a tipografia tremendo enquanto desliza. */
+  .sw-trilha-camada-sai,
+  .sw-trilha-camada-entra {
+    will-change: transform;
+  }
+
+  /* -----------------------------------------------------------------------
+     TROCA DE FILTRO — o mesmo arrasto, no outro eixo
+
+     Horizontal é trocar de trilha, dois recortes irmãos lado a lado.
+     Vertical é filtrar dentro de uma: a mesma lista sobe e sai, e outra
+     versão dela chega por baixo. Um gesto só no portal inteiro, dois eixos.
+
+     A diferença de implementação entre os dois não é de gosto. Na horizontal
+     o `overflow-x: hidden` do portal apara o que passa da borda, então o
+     acervo sai da tela inteira. Na vertical não há nada aparando, então quem
+     corta é o palco, e o percurso é a altura dele.
+     ----------------------------------------------------------------------- */
+
+  .sw-filtro-palco {
+    /* Tempo menor que o da trilha porque o percurso é menor: a altura do
+       acervo, não a largura da janela. A curva é a mesma, que é o que faz os
+       dois eixos parecerem o mesmo gesto. */
+    --sw-tempo: 500ms;
+    --sw-curva: cubic-bezier(0.32, 0.72, 0, 1);
+    position: relative;
+    /* `clip`, e não `hidden`: corta sem virar contêiner de rolagem. A margem
+       preserva o que transborda por desenho, as marcas de canto do destaque
+       (3px) e o bloom da moldura acesa (6px). */
+    overflow: clip;
+    overflow-clip-margin: 6px;
+    transition: height var(--sw-tempo) var(--sw-curva);
+  }
+
+  /* Sai do fluxo para não empurrar a lista que está entrando. */
+  .sw-filtro-camada-sai {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    animation: swFiltroSai var(--sw-tempo) var(--sw-curva) both;
+  }
+
+  .sw-filtro-camada-entra {
+    animation: swFiltroEntra var(--sw-tempo) var(--sw-curva) both;
+  }
+
+  .sw-filtro-camada-sai,
+  .sw-filtro-camada-entra {
+    will-change: transform;
+  }
+
+  /* O percurso vem do componente, medido em pixels, porque depende da altura
+     das duas listas. O `100%` é só o que sobra se ele faltar.
+
+     O sentido também vem de lá: 1 desce, -1 sobe, conforme a pessoa andou para
+     a direita ou para a esquerda na fileira de chips. A lista que sai e a que
+     entra vão para lados opostos, senão não haveria troca, haveria as duas
+     indo embora juntas. */
+  @keyframes swFiltroSai {
+    from { transform: translateY(0); }
+    to   { transform: translateY(calc(var(--sw-percurso, 100%) * var(--sw-sentido-y, -1))); }
+  }
+
+  @keyframes swFiltroEntra {
+    from { transform: translateY(calc(var(--sw-percurso, 100%) * var(--sw-sentido-y, -1) * -1)); }
+    to   { transform: translateY(0); }
+  }
+
+  /* 100vw, e não 100%: a coluna de conteúdo é mais estreita que a janela, e
+     deslocar só a largura dela deixaria o acervo parado à vista, ao lado. O
+     `overflow-x: hidden` do body é quem apara o que passa da borda. */
+  @keyframes swTrilhaSai {
+    from { transform: translateX(0); }
+    to   { transform: translateX(calc(var(--sw-sentido, 1) * -100vw)); }
+  }
+
+  @keyframes swTrilhaEntra {
+    from { transform: translateX(calc(var(--sw-sentido, 1) * 100vw)); }
+    to   { transform: translateX(0); }
+  }
+
+  /* =======================================================================
+     ATMOSFERA — o mínimo para o preto não parecer chapado
+     ======================================================================= */
+
+  /* Scanlines. 1.4% de alfa: o CRT precisa ser sentido, não visto. */
+  .sw-scan {
+    background-image: repeating-linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.014) 0px,
+      rgba(255, 255, 255, 0.014) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  }
+
+  /* Malha em perspectiva. Estática de propósito: a versão animada era o
+     elemento mais barulhento da tela. Uma por página, no herói. */
+  .sw-mesh {
+    position: absolute;
+    left: -50%;
+    right: -50%;
+    bottom: 0;
+    height: 55%;
+    perspective: 200px;
+    perspective-origin: 50% 0%;
+    overflow: hidden;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 32%, #000 88%, transparent 100%);
+    mask-image: linear-gradient(180deg, transparent 0%, #000 32%, #000 88%, transparent 100%);
+  }
+
+  .sw-mesh::before {
+    content: '';
+    position: absolute;
+    left: -20%;
+    right: -20%;
+    top: 0;
+    height: 300%;
+    transform-origin: 50% 0%;
+    transform: rotateX(80deg);
+    background-image:
+      linear-gradient(90deg, rgba(255, 46, 151, 0.30) 1px, transparent 1px),
+      linear-gradient(180deg, rgba(255, 46, 151, 0.22) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+
+  /* Linha do horizonte, para a malha ter onde morrer. */
+  .sw-horizon {
+    background: linear-gradient(90deg, transparent 0%, #FF2E97 30%, #FFFFFF 50%, #FF2E97 70%, transparent 100%);
+    box-shadow: 0 0 10px rgba(255, 46, 151, 0.55);
+  }
+}
+
+/* Fusão simples, usada quando o sistema pede movimento reduzido: a troca de
+   trilha continua legível, só que sem percurso nenhum. */
+@keyframes swTrilhaFundeSai {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes swTrilhaFundeEntra {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Fora de @layer de propósito: regra sem camada vence regra em camada, então
+   estas sobrescrevem as do bloco `components` sem precisar de !important. */
+@media (prefers-reduced-motion: reduce) {
+  .sw-caret::after { animation: none; }
+
+  /* O traço muda de aba sem deslizar, e a altura do palco vai direto ao valor
+     novo (o componente nem chega a prender a altura antiga). */
+  .sw-trilha-indicador[data-pronto='sim'] { transition: none; }
+  .sw-trilha-palco { transition: none; }
+
+  /* Travessia nenhuma: o acervo antigo apaga e o novo acende no lugar, em
+     150ms, sem sair do sítio. */
+  .sw-trilha-camada-sai { animation: swTrilhaFundeSai 150ms ease-in both; }
+  .sw-trilha-camada-entra { animation: swTrilhaFundeEntra 150ms ease-out both; }
+
+  /* O mesmo para a troca de filtro. */
+  .sw-filtro-palco { transition: none; }
+  .sw-filtro-camada-sai { animation: swTrilhaFundeSai 150ms ease-in both; }
+  .sw-filtro-camada-entra { animation: swTrilhaFundeEntra 150ms ease-out both; }
+}
