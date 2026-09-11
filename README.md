@@ -3,6 +3,15 @@
 Portal editorial sobre roller derby, entrega de **Framework Application** do
 challenge FIAP "O Mundo de Synthetica" (2026).
 
+## Integrantes
+
+| Nome | RM |
+|---|---|
+| Denise Shamira Chuquimia | 563714 |
+| Tandara Sartore Perez de Azevedo | 566455 |
+| Álvaro Milantonio | 561652 |
+| Leonardo Henrique | 564231 |
+
 Mini sistema CRUD em **FastAPI + React**, com o frontend consumindo a API por
 `fetch`. O portal tem cinco rotas de leitura e um painel editorial onde os
 quatro verbos do CRUD são exercitados pela interface.
@@ -13,10 +22,21 @@ A entrega são dois repositórios separados, e não um monorepo:
 
 | Parte | Repositório | Stack |
 |---|---|---|
-| Portal (este) | **[LINK DESTE REPOSITÓRIO]** | Next 15 (App Router), React 19, TypeScript, Tailwind 4 |
-| API | **[LINK DO REPOSITÓRIO DA API]** | FastAPI, Pydantic, dados em memória |
+| Portal (este) | https://github.com/leonardohb7/syntheticafrontend | Next 15 (App Router), React 19, TypeScript, Tailwind 4 |
+| API | https://github.com/leonardohb7/syntheticabackend | FastAPI, Pydantic, dados em memória |
 
-Publicados em: portal em **[URL DO PORTAL]**, API em **[URL DA API]**.
+Publicados em:
+
+| Serviço | URL |
+|---|---|
+| Portal (Vercel) | https://frontend-three-fawn-51.vercel.app |
+| API (Render) | https://syntheticabackend.onrender.com |
+| Documentação da API | https://syntheticabackend.onrender.com/docs |
+
+A API está no plano gratuito do Render e hiberna quando fica ociosa. A primeira
+visita depois de uma pausa espera o boot, que leva dezenas de segundos, e o
+portal mostra "Consultando acervo" nesse intervalo. Abrir o link da API antes de
+apresentar o portal acorda o serviço.
 
 ## Como rodar
 
@@ -158,14 +178,42 @@ segundos, sentido anti-horário) são canônicas e corretas.
 
 ## Deploy
 
-O portal é um app Next estático o bastante para publicar em qualquer
-plataforma que rode Next 15. O que não pode faltar:
+O portal está na **Vercel**, publicado a partir deste repositório. A Vercel
+detecta o Next sozinha, então build command e output directory ficam no padrão.
+A pasta do app é `frontend/`, e é ela que precisa estar como **Root Directory**
+no projeto da Vercel.
 
-- **`NEXT_PUBLIC_API_URL`** apontando para a URL pública da API, definida na
-  plataforma de deploy. O valor do `.env.local` não vai junto.
-- **`FRONTEND_URL`** definida no serviço da API, com a URL pública do portal.
-  Sem ela o navegador bloqueia as respostas por CORS, e o portal fica vazio sem
-  erro visível em lugar nenhum.
+As duas variáveis de ambiente do deploy, uma de cada lado:
+
+| Onde | Variável | Valor |
+|---|---|---|
+| Vercel | `NEXT_PUBLIC_API_URL` | `https://syntheticabackend.onrender.com` |
+| Render | `FRONTEND_URL` | `https://frontend-three-fawn-51.vercel.app` |
+
+As duas são obrigatórias, e cada uma falha de um jeito diferente:
+
+**Sem `NEXT_PUBLIC_API_URL` na Vercel**, o build cai no fallback do
+`services/api.ts`, que é `http://127.0.0.1:8000`. O portal publicado passa a
+pedir dados ao localhost de quem está visitando, que não tem backend nenhum, e
+toda página de acervo mostra o estado de erro. Como o prefixo `NEXT_PUBLIC_` é
+**inlined em tempo de build**, criar a variável não basta: é preciso redeploy
+para o valor entrar no bundle.
+
+**Sem `FRONTEND_URL` no Render**, o navegador bloqueia as respostas por CORS. O
+sintoma é pior de ler, porque o log do servidor mostra 200 em tudo enquanto a
+tela fica vazia: quem barra é o navegador, depois da resposta chegar.
+
+Para conferir se o CORS está de pé, sem abrir o portal:
+
+```bash
+curl -s -o /dev/null -D - \
+  -H "Origin: https://frontend-three-fawn-51.vercel.app" \
+  https://syntheticabackend.onrender.com/categorias | grep -i access-control
+```
+
+A resposta precisa trazer `access-control-allow-origin` com a URL da Vercel. Se
+o cabeçalho não vier, a variável no Render está ausente, escrita com barra no
+fim ou apontando para outra URL.
 
 Como a base da API é uma lista em memória, o conteúdo cadastrado pelo painel
 desaparece quando o serviço reinicia ou hiberna. O acervo nunca fica vazio,
@@ -173,8 +221,10 @@ porque o seed recarrega no startup.
 
 ## Pendências da entrega
 
-- [ ] Integrantes do grupo: [NOME INTEGRANTE 1], [NOME INTEGRANTE 2]
-- [ ] Links dos dois repositórios, no topo deste arquivo
-- [ ] URL do portal publicado e URL da API publicada
+- [x] Links dos dois repositórios, no topo deste arquivo
+- [x] URL do portal publicado e URL da API publicada
+- [x] `FRONTEND_URL` configurada no Render, com o CORS respondendo
+- [x] Integrantes do grupo
+- [ ] `NEXT_PUBLIC_API_URL` configurada na Vercel, com redeploy depois
 - [ ] PDF de descrição do sistema
 - [ ] Vídeo pitch de 2 a 3 minutos
